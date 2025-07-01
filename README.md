@@ -1,2 +1,10 @@
-# GCenter
-Local Game Center
+# 🎮 Game Center  
+Локальный игровой центр с 4 мини-играми:  
+- Змейка 🐍  
+- Шарики 🎾  
+- Буквы 🔠  
+- Цифры 🔢  
+
+# 🚀 Запуск  
+1. Скачать проект:  https://github.com/Mark404G/GCenter.git
+2. Скачать игру: 
