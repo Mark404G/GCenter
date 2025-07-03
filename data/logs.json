@@ -1,0 +1,20 @@
+[
+  {
+    "date": "03.07.2025 17:21",
+    "player": "as",
+    "game": "Digits",
+    "score": 2
+  },
+  {
+    "date": "03.07.2025 17:23",
+    "player": "test",
+    "game": "Snake",
+    "score": 24
+  },
+  {
+    "date": "03.07.2025 17:23",
+    "player": "test",
+    "game": "Letters",
+    "score": 10
+  }
+]
