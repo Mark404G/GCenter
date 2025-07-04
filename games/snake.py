@@ -34,10 +34,10 @@ class Snake:
         
         # Типы еды с их свойствами
         self.FOOD_TYPES = {
-            "blue": {"color": "deep sky blue", "value": 1, "spawn_chance": 0.7, "size": 1},
-            "yellow": {"color": "yellow", "value": 4, "spawn_chance": 0.2, "size": 2},
-            "red": {"color": "red", "value": 9, "spawn_chance": 0.07, "size": 3},
-            "purple": {"color": "purple", "value": 16, "spawn_chance": 0.03, "size": 4}
+            "blue": {"color": "deep sky blue", "value": 1, "spawn_chance": 0.6, "size": 1},
+            "yellow": {"color": "yellow", "value": 4, "spawn_chance": 0.25, "size": 2},
+            "red": {"color": "red", "value": 9, "spawn_chance": 0.1, "size": 3},
+            "purple": {"color": "purple", "value": 16, "spawn_chance": 0.05, "size": 4}
         }
         
         # Сообщения при завершении игры

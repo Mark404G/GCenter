@@ -1,6 +1,5 @@
 import tkinter as tk
 import random
-import time
 
 class Digits:
     def __init__(self, parent_window, callback=None):
@@ -26,19 +25,20 @@ class Digits:
         # Настройки скорости
         self.BASE_SPEED = 1.00             # Начальная скорость падения
         self.SPEED_INCREASE = 0.05         # Увеличение скорости за попадание
-        self.MAX_SPEED = 6.00              # Максимальная скорость
+        self.MAX_SPEED = 8.00              # Максимальная скорость
         
         # Настройки появления цифр
-        self.MIN_SPAWN_DELAY = 700         # Минимальная задержка (мс)
+        self.MIN_SPAWN_DELAY = 400         # Минимальная задержка (мс)
         self.MAX_SPAWN_DELAY = 2000        # Максимальная задержка (мс)
-        self.SPAWN_ACCEL = 0.98            # Коэф. ускорения появления цифр
-        self.TARGET_DIGITS = 6             # Целевое количество цифр
+        self.SPAWN_ACCEL = 0.97            # Коэф. ускорения появления цифр
+        self.TARGET_DIGITS = 7             # Целевое количество цифр
         
         # Настройки анимации
         self.HIT_ANIM_DURATION = 30        # Длительность анимации попадания
         self.HIT_ANIM_SPEED = 2            # Скорость анимации попадания
         self.REAL_HIT_COLOR = '#7CFC00'    # Цвет анимации для настоящих цифр
         self.FAKE_HIT_COLOR = '#FFA500'    # Цвет анимации для фальшивых
+        self.PENALTY_COLOR = '#FF0000'     # Цвет для штрафа
         
         # ========== ИГРОВЫЕ ПЕРЕМЕННЫЕ ==========
         self.score = 0                      # Текущий счет
@@ -173,7 +173,6 @@ class Digits:
             'speed': self.current_speed,
             'hit': False,
             'fake': is_fake,
-            'spawn_time': time.time()
         })
         
         # Регулируем скорость спавна
@@ -193,9 +192,7 @@ class Digits:
             
         for digit in self.digits[:]:
             # Увеличиваем скорость со временем
-            time_alive = time.time() - digit['spawn_time']
-            speed_mult = 1.0 + min(4.0, (time_alive / 8.0) ** 1.5)
-            digit['y'] += digit['speed'] * speed_mult
+            digit['y'] += digit['speed']
             
             # Обновляем позицию
             self.canvas.coords(
@@ -242,27 +239,59 @@ class Digits:
             return
             
         hit_any = False
+        digit_exists = False
         
         # Проверяем все цифры на экране
         for digit in self.digits[:]:
-            if digit['digit'] == key and not digit['hit']:
-                if digit['fake']:
-                    # Нажали фальшивую — проигрыш
-                    self.game_over()
-                    return
-                else:
-                    # Нажали настоящую — +1 очко
-                    digit['hit'] = True
-                    hit_any = True
-                    self.score += 1
-                    self.update_score()
-                    self.show_hit_animation(digit['x'], digit['y'])
-                    self.current_speed = min(self.MAX_SPEED, self.current_speed + self.SPEED_INCREASE)
+            if digit['digit'] == key:
+                digit_exists = True
+                if not digit['hit']:
+                    if digit['fake']:
+                        # Нажали фальшивую — проигрыш
+                        self.game_over()
+                        return
+                    else:
+                        # Нажали настоящую — +1 очко
+                        digit['hit'] = True
+                        hit_any = True
+                        self.score += 1
+                        self.update_score()
+                        self.show_hit_animation(digit['x'], digit['y'])
+                        self.current_speed = min(self.MAX_SPEED, self.current_speed + self.SPEED_INCREASE)
         
         if hit_any:
             for digit in self.digits[:]:
                 if digit['hit']:
                     self.remove_digit(digit)
+        elif not digit_exists:
+            # Нажали цифру, которой нет на экране — штраф
+            self.score -= 3
+            self.update_score()
+            self.show_penalty_animation()
+
+    def show_penalty_animation(self):
+        """Показывает анимацию штрафа"""
+        # Текст "Штраф 3 рубля" внизу
+        penalty_text = self.canvas.create_text(
+            self.WIDTH//2, self.HEIGHT - 30,
+            text="Штраф 3 рубля",
+            fill=self.PENALTY_COLOR,
+            font=('Arial', 24, 'bold')
+        )
+        
+        # Текст "-3" возле счета
+        minus_text = self.canvas.create_text(
+            150, 30,
+            text="-3",
+            fill=self.PENALTY_COLOR,
+            font=('Arial', 20, 'bold')
+        )
+        
+        # Удаляем через 1 секунду
+        self.root.after(1000, lambda: (
+            self.canvas.delete(penalty_text),
+            self.canvas.delete(minus_text)
+        ))
 
     def remove_digit(self, digit):
         """Удаляет цифру с экрана"""
