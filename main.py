@@ -8,7 +8,7 @@ class GameCenter:
     def __init__(self, root):
         """Инициализация игрового центра"""
         self.root = root
-        self.root.title("Игровой Центр")
+        self.root.title("Game 🎮 Center")
         self.root.geometry("600x650")
         
         # Инициализация данных
@@ -43,16 +43,16 @@ class GameCenter:
         
         tk.Label(
             auth_frame, 
-            text="Привет!\nЧтобы продолжить, необходимо авторизоваться",
+            text="Привет🖐️\nЧтобы продолжить, необходимо авторизоваться",
             font=('Arial', 14)
-        ).pack(pady=20)
+        ).pack(pady=150)
         
         btn_frame = tk.Frame(auth_frame)
         btn_frame.pack(pady=20)
         
         tk.Button(
             btn_frame, 
-            text="Войти", 
+            text="👤 Войти", 
             command=self.login_user,
             width=15,
             height=2,
@@ -61,7 +61,7 @@ class GameCenter:
         
         tk.Button(
             btn_frame, 
-            text="Регистрация", 
+            text="✨ Регистрация", 
             command=self.create_user,
             width=15,
             height=2,
@@ -83,7 +83,7 @@ class GameCenter:
         self.bottom_frame.pack(pady=10, fill=tk.X)
         
         # Таблица лидеров
-        tk.Label(self.top_frame, text="Топ игроков", font=('Arial', 14, 'bold')).pack()
+        tk.Label(self.top_frame, text="🏆 Топ игроков", font=('Arial', 14, 'bold')).pack()
         
         self.top_tree = ttk.Treeview(self.top_frame, height=6)
         self.top_tree['columns'] = ('Snake', 'Balls', 'Letters', 'Digits')
@@ -105,7 +105,7 @@ class GameCenter:
         logs_frame = tk.Frame(self.middle_frame)
         logs_frame.pack(fill=tk.BOTH, expand=True)
         
-        tk.Label(logs_frame, text="История игр", font=('Arial', 12)).pack()
+        tk.Label(logs_frame, text="🕒 История игр", font=('Arial', 12)).pack()
         
         # Создаем Scrollbar и Text для логов
         scrollbar = tk.Scrollbar(logs_frame)
@@ -219,7 +219,7 @@ class GameCenter:
     def add_game_log(self, game_name, score):
         """Добавление записи в историю игр"""
         log_entry = {
-            "date": datetime.now().strftime("%d.%m.%Y %H:%M"),  # Теперь с годом
+            "date": datetime.now().strftime("%d.%m.%Y %H:%M:%S"), 
             "player": self.current_user,
             "game": game_name.capitalize(),
             "score": score
@@ -245,17 +245,16 @@ class GameCenter:
             # Сортируем логи по полной дате (с годом)
             sorted_logs = sorted(
                 self.game_logs,
-                key=lambda x: datetime.strptime(x['date'], "%d.%m.%Y %H:%M"),
+                key=lambda x: datetime.strptime(x['date'], "%d.%m.%Y %H:%M:%S"),
                 reverse=True
             )
             
             # Отображаем без года (как было раньше)
             for log in sorted_logs:
                 # Извлекаем только день, месяц и время для отображения
-                display_date = ' '.join(log['date'].split()[:-1])  # Удаляем год
                 self.logs_text.insert(
                     tk.END,
-                    f"{display_date} ({log.get('player', 'unknown')}) "
+                    f"{log['date']} ({log.get('player', 'unknown')}) "
                     f"{log.get('game', 'Unknown')}: {log.get('score', '?')}\n"
                 )
                 
@@ -265,7 +264,7 @@ class GameCenter:
             for log in reversed(self.game_logs[-20:]):  # Последние 20 записей
                 self.logs_text.insert(
                     tk.END,
-                    f"{log.get('date', '??.?? ??:??')} ({log.get('player', 'unknown')}) "
+                    f"{log.get('date', '??.?? ??:??:??')} ({log.get('player', 'unknown')}) "
                     f"{log.get('game', 'Unknown')}: {log.get('score', '?')}\n"
                 )
         
