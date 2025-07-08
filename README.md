@@ -37,6 +37,6 @@
 <br>
 
 ## ⚙️ Системные требования
-🖥️ OS: Windows 7+/MacOS 10.12+/Linux
+🖥️ OS: Windows 7+ / MacOS 10.12+ / Linux
 
 💾 20 МБ свободного места
