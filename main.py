@@ -8,9 +8,23 @@ class GameCenter:
     def __init__(self, root):
         """Инициализация игрового центра"""
         self.root = root
-        self.root.title("Game 🎮 Center")
+        self.root.title("GCenter")
         self.root.geometry("600x650")
         
+        # Константы для расчета рейтинга
+        self.RATING_PER_GAME = 1.25  # Максимальный рейтинг за одну игру (1.25 для 4 игр)
+        self.GAME_NAMES = ["snake", "balls", "letters", "digits"]  # Список игр
+        
+        # Загружаем иконку
+        try:
+            self.root.iconbitmap("GC.ico")  # Для Windows
+        except:
+            try:
+                icon = tk.PhotoImage(file="GC.ico")
+                self.root.iconphoto(False, icon)
+            except:
+                pass  # Если иконка вообще не найдена, оставляем стандартную
+            
         # Инициализация данных
         self.current_user = None  # Текущий авторизованный пользователь
         self.data_dir = "data"  # Папка для хранения данных
@@ -86,14 +100,16 @@ class GameCenter:
         tk.Label(self.top_frame, text="🏆 Топ игроков", font=('Arial', 14, 'bold')).pack()
         
         self.top_tree = ttk.Treeview(self.top_frame, height=6)
-        self.top_tree['columns'] = ('Snake', 'Balls', 'Letters', 'Digits')
+        self.top_tree['columns'] = ('Rating', 'Snake', 'Balls', 'Letters', 'Digits')
         self.top_tree.column('#0', width=100, anchor='w')
-        self.top_tree.column('Snake', width=100, anchor='center')
-        self.top_tree.column('Balls', width=100, anchor='center')
-        self.top_tree.column('Letters', width=100, anchor='center')
-        self.top_tree.column('Digits', width=100, anchor='center')
+        self.top_tree.column('Rating', width=80, anchor='center')
+        self.top_tree.column('Snake', width=80, anchor='center')
+        self.top_tree.column('Balls', width=80, anchor='center')
+        self.top_tree.column('Letters', width=80, anchor='center')
+        self.top_tree.column('Digits', width=80, anchor='center')
         
         self.top_tree.heading('#0', text='Игрок')
+        self.top_tree.heading('Rating', text='Рейтинг')
         self.top_tree.heading('Snake', text='Snake')
         self.top_tree.heading('Balls', text='Balls')
         self.top_tree.heading('Letters', text='Letters')
@@ -171,6 +187,16 @@ class GameCenter:
         # Создаем новое окно для игры
         game_window = tk.Toplevel(self.root)
         game_window.protocol("WM_DELETE_WINDOW", lambda: self.on_game_close(game_window))
+
+        # Создаем иконку для отдельных окон с играми
+        try:
+            game_window.iconbitmap("GameCenter.ico")  # Для Windows
+        except:
+            try:
+                icon = tk.PhotoImage(file="GameCenter.ico")
+                game_window.iconphoto(False, icon)
+            except:
+                pass
         
         def universal_callback(score):
             """Универсальный обработчик завершения игры"""
@@ -271,13 +297,10 @@ class GameCenter:
         self.logs_text.config(state='disabled')
         self.logs_text.yview_moveto(0)  # Прокрутка к началу
 
-    def update_top_players(self):
-        """Обновление таблицы лидеров с новой логикой сортировки"""
-        for item in self.top_tree.get_children():
-            self.top_tree.delete(item)
-        
-        players_data = {}
+    def calculate_player_ratings(self):
+        """Рассчитывает рейтинги игроков для всех игр"""
         # Собираем данные обо всех игроках
+        players_data = {}
         for filename in os.listdir(self.accounts_dir):
             if filename.endswith('.json'):
                 with open(os.path.join(self.accounts_dir, filename), 'r', encoding='utf-8') as f:
@@ -285,30 +308,68 @@ class GameCenter:
                     username = account["username"]
                     games_data = account["games"]
                     
-                    # Подсчитываем количество сыгранных игр (ненулевые результаты)
-                    games_played = sum(1 for game in games_data.values() if game["high_score"] > 0)
-                    
                     players_data[username] = {
-                        "games_played": games_played,
                         "scores": {
                             "snake": games_data["snake"]["high_score"],
                             "balls": games_data["balls"]["high_score"],
                             "letters": games_data["letters"]["high_score"],
                             "digits": games_data["digits"]["high_score"]
-                        },
-                        "total_score": sum(game["high_score"] for game in games_data.values())
+                        }
                     }
         
-        # Сортируем игроков по:
-        # 1. Количеству сыгранных игр (по убыванию)
-        # 2. Общему количеству очков (по убыванию)
+        # Если нет игроков, возвращаем пустой словарь
+        if not players_data:
+            return {}
+        
+        # Для каждой игры рассчитываем позиции игроков и распределяем рейтинг
+        for game in self.GAME_NAMES:
+            # Собираем всех игроков, которые играли в эту игру (даже с 0 очками)
+            game_scores = [(player, data["scores"][game]) for player, data in players_data.items()]
+            
+            # Сортируем по убыванию очков
+            sorted_scores = sorted(game_scores, key=lambda x: (-x[1], x[0]))
+            
+            # Количество игроков в этой игре
+            num_players = len(sorted_scores)
+            
+            # Распределяем рейтинг
+            for i, (player, score) in enumerate(sorted_scores):
+                if num_players == 1:
+                    # Если игрок один, он получает максимальный рейтинг
+                    rating = self.RATING_PER_GAME
+                else:
+                    # Линейное распределение рейтинга от max до 0
+                    rating = self.RATING_PER_GAME * (1 - i / (num_players - 1))
+                
+                # Добавляем рейтинг в данные игрока
+                if "ratings" not in players_data[player]:
+                    players_data[player]["ratings"] = {}
+                players_data[player]["ratings"][game] = rating
+        
+        # Рассчитываем общий рейтинг для каждого игрока
+        for player, data in players_data.items():
+            total_rating = sum(data.get("ratings", {}).values())
+            players_data[player]["total_rating"] = total_rating
+        
+        return players_data
+
+    def update_top_players(self):
+        """Обновление таблицы лидеров с новой системой рейтинга"""
+        for item in self.top_tree.get_children():
+            self.top_tree.delete(item)
+        
+        # Получаем данные с рассчитанными рейтингами
+        players_data = self.calculate_player_ratings()
+        
+        # Сортируем игроков по общему рейтингу (по убыванию)
         sorted_players = sorted(players_data.items(),
-                              key=lambda x: (-x[1]['games_played'], -x[1]['total_score']))
+                              key=lambda x: -x[1]['total_rating'])
         
         # Добавляем игроков в таблицу
         for player, data in sorted_players[:10]:  # Только топ-10
             scores = data['scores']
             self.top_tree.insert('', 'end', text=player, values=(
+                f"{data['total_rating']:.2f}",  # Рейтинг с округлением до сотых
                 scores["snake"],
                 scores["balls"],
                 scores["letters"],
